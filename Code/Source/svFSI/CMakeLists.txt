@@ -105,6 +105,56 @@ if(WITH_TRILINOS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
+# Find PETSC package if requested
+if(SV_USE_PETSC)
+  # PETSC_DIR is the path to installed PETSC folder.
+  # In linux, it should be defined as an environment variable
+  # in bash shell.
+  IF(DEFINED ENV{PETSC_DIR})
+    set(PETSC_FOUND 1)
+  ELSE()
+    set(PETSC_FOUND 0)
+  ENDIF()
+
+  IF(PETSC_FOUND)
+    SET(PETSC_DIR $ENV{PETSC_DIR})
+    SET(PETSC_ARCH $ENV{PETSC_ARCH})
+
+    SET(PETSC_INCLUDE_DIRS
+        "${PETSC_DIR}/include"
+        "${PETSC_DIR}/${PETSC_ARCH}/include"
+    )
+
+    SET(PETSC_LIBRARY_DIRS
+        "-L${PETSC_DIR}/lib
+        -L${PETSC_DIR}/${PETSC_ARCH}/lib
+        -lpetsc -lHYPRE -lspqr -lumfpack -lklu -lcholmod
+        -lbtf -lccolamd -lcolamd -lcamd -lamd -lsuitesparseconfig
+        -ldmumps -lmumps_common -lpord -lscalapack
+        -lsuperlu -lsuperlu_dist -lml"
+    )
+
+    MESSAGE("\nFound PETSC!  Here are the details: ")
+    MESSAGE("   PETSC_DIR = ${PETSC_DIR}")
+    MESSAGE("   PETSC_ARCH = ${PETSC_ARCH}")
+    MESSAGE("   PETSC_LIBRARY_DIRS = ${PETSC_LIBRARY_DIRS}")
+    MESSAGE("   PETSC_INCLUDE_DIRS = ${PETSC_INCLUDE_DIRS}")
+    MESSAGE("End of PETSC details\n")
+    MESSAGE("Setting WITH_PETSC to true\n")
+
+    SET(WITH_PETSC 1)
+  ELSE()
+    MESSAGE(WARNING "Could not find PETSC. Compiling svFSI without PETSC.")
+  ENDIF()
+
+endif()
+
+# add PETSC flags and defines
+if(WITH_PETSC)
+  ADD_DEFINITIONS(-DWITH_PETSC)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic -std=c99")
+endif()
+
 
 set(FSRCS TYPEMOD.f
          UTIL.f
@@ -170,6 +220,15 @@ set(F90SRCS vtkComMod.f90
 set(CSRCS SPLIT.c
           vtkZpipe.c)
 
+if(WITH_PETSC)
+  set(CSRCS ${CSRCS} petsc_linear_solver.c)
+
+  # PETSC directories and libraries
+  include_directories(${PETSC_INCLUDE_DIRS})
+  link_directories(${PETSC_LIBRARY_DIRS})
+endif()
+
+
 set(CXXSRCS remeshTet.cpp)
 
 
@@ -185,6 +244,7 @@ endif()
 
 
 simvascular_add_executable(${SV_SVFSI_EXE}
+set_target_properties(${SV_SVFSI_EXE} PROPERTIES LINKER_LANGUAGE Fortran)
   SRCS ${CSRCS}
   SRCS ${CXXSRCS}
   SRCS ${FSRCS}
@@ -199,9 +259,9 @@ target_link_libraries(${SV_SVFSI_EXE}
   ${GLOBAL_LIBRARIES}
   ${INTELRUNTIME_LIBRARIES}
   ${ZLIB_LIBRARY}
-  ${METIS_SVFSI_LIBRARY_NAME}
-  ${PARMETIS_SVFSI_LIBRARY_NAME}
-  ${TETGEN_LIBRARY_NAME}
+  ${METIS_SVFSI_LIBRARY}
+  ${PARMETIS_SVFSI_LIBRARY}
+  ${TETGEN_LIBRARY}
   ${SV_MPI_Fortran_LIBRARIES}
   ${SV_LIB_SVFSILS_NAME}${SV_MPI_NAME_EXT}
   )
@@ -212,7 +272,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   find_package(LAPACK REQUIRED)
   target_link_libraries(${SV_SVFSI_EXE} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  set_target_properties(svFSI PROPERTIES LINKER_LANGUAGE Fortran)
   target_link_libraries(${SV_SVFSI_EXE} -mkl)
 endif()
 
@@ -223,4 +282,8 @@ endif()
 
 if(WITH_TRILINOS)
   target_link_libraries(${SV_SVFSI_EXE} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+endif()
+
+if(WITH_PETSC)
+  target_link_libraries(${SV_SVFSI_EXE} ${PETSC_LIBRARY_DIRS})
 endif()
