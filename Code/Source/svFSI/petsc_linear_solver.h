@@ -45,6 +45,7 @@ typedef struct {
 
     PetscInt  nNo;      /* local number of vertices */
     PetscInt  mynNo;    /* number of owned vertices */
+    PetscInt  nlpBC;    /* number of faces with coupled BC */
 
     PetscInt *map;      /* local to local mapping, map[O2] = O1 */
     PetscInt *ltg;      /* local to global in PETSc ordering */
@@ -58,12 +59,18 @@ typedef struct {
     PetscBool created;  /* Whether mat and vec is created */
     const char *pre;      /* option prefix for different equations */
 
-    PetscInt  lpPts;    /* number of dofs with lumped parameter BC */
+    PetscInt *lpPts;    /* For each face with coupledFlag = 1, number of nonzero DOFs contributed by this process (local nonzeros on this rank) */
     PetscInt *lpBC_l;   /* O2 index for dofs with lumped parameter BC */
     PetscInt *lpBC_g;   /* PETSc index for dofs with lumped parameter BC */
+    PetscReal *V_global;      /* Values of all nonzero entries for lpBC assembly, collected from all processes and ordered face-by-face as passed from Fortran */
+    PetscInt  *lpBC_g_global; /* Global indices corresponding to V_global, i.e. global DOF indices of the collected nonzeros */
+    PetscInt  *lpPts_global;  /* For each face with coupledFlag = 1, total number of nonzero DOFs summed over all processes (global nonzeros per face) */
 
     PetscInt  DirPts;   /* number of dofs with Dirichlet BC */
     PetscInt *DirBC;    /* PETSc index for dofs with Dirichlet BC */
+
+    PetscInt  zeroRows; /* number of rows that are complete zero  */
+    PetscInt *zeroRowI; /* PETSc index for rows that are complete zero */
 
     Vec       b;        /* rhs/solution vector of owned vertices */
     Mat       A;        /* stiffness matrix */
@@ -116,7 +123,7 @@ void petsc_initialize_(const PetscInt *, const PetscInt *, const PetscInt *, \
                        const PetscInt *, const PetscInt *, const PetscInt *, \
                        const PetscInt *, const PetscInt *);
 void petsc_create_linearsystem_(const PetscInt *, const PetscInt *, const PetscInt *, \
-                                const PetscReal *, const PetscReal *);
+                                const PetscReal *, const PetscReal *, const PetscInt *);
 void petsc_create_linearsolver_(const PetscInt *, const PetscInt *, const PetscInt *, \
                                 const PetscInt *, const PetscReal *, const PetscReal *, \
                                 const PetscInt *, const PetscInt *, const PetscInt *, \
@@ -141,6 +148,7 @@ PetscErrorCode petsc_create_vecmat(const PetscInt, const PetscInt, const PetscIn
 PetscErrorCode petsc_set_vec(const PetscInt, const PetscInt, const PetscReal *);
 PetscErrorCode petsc_set_mat(const PetscInt, const PetscInt, const PetscReal *);
 PetscErrorCode petsc_set_bc(const PetscInt, const PetscReal *, const PetscReal *);
+PetscErrorCode petsc_fix_diag(const PetscInt);
 PetscErrorCode petsc_set_pcfieldsplit(const PetscInt, const PetscInt);
 PetscErrorCode petsc_pc_rcs(const PetscInt, const PetscInt);
 
@@ -151,3 +159,4 @@ PetscErrorCode petsc_debug_save_vec(const char *, Vec);
 PetscErrorCode petsc_debug_save_mat(const char *, Mat);
 
 #endif
+
