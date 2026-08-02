@@ -107,51 +107,72 @@ endif()
 
 # Find PETSC package if requested
 if(SV_USE_PETSC)
-  # PETSC_DIR is the path to installed PETSC folder.
-  # In linux, it should be defined as an environment variable
-  # in bash shell.
-  IF(DEFINED ENV{PETSC_DIR})
+  # PETSC_DIR should point to the PETSc install prefix
+  # PETSC_ARCH should match the PETSc arch subdir used during build
+  if(DEFINED ENV{PETSC_DIR} AND DEFINED ENV{PETSC_ARCH})
     set(PETSC_FOUND 1)
-  ELSE()
+  else()
     set(PETSC_FOUND 0)
-  ENDIF()
+  endif()
 
-  IF(PETSC_FOUND)
-    SET(PETSC_DIR $ENV{PETSC_DIR})
-    SET(PETSC_ARCH $ENV{PETSC_ARCH})
+  if(PETSC_FOUND)
+    set(PETSC_DIR $ENV{PETSC_DIR})
+    set(PETSC_ARCH $ENV{PETSC_ARCH})
 
-    SET(PETSC_INCLUDE_DIRS
+    # Headers
+    set(PETSC_INCLUDE_DIRS
         "${PETSC_DIR}/include"
         "${PETSC_DIR}/${PETSC_ARCH}/include"
     )
 
-    SET(PETSC_LIBRARY_DIRS
-        "-L${PETSC_DIR}/lib
-        -L${PETSC_DIR}/${PETSC_ARCH}/lib
-        -lpetsc -lHYPRE -lspqr -lumfpack -lklu -lcholmod
-        -lbtf -lccolamd -lcolamd -lcamd -lamd -lsuitesparseconfig
-        -ldmumps -lmumps_common -lpord -lscalapack
-        -lsuperlu -lsuperlu_dist -lml"
+    # Library search directories only
+    set(PETSC_LIBRARY_DIRS
+        "${PETSC_DIR}/lib"
+        "${PETSC_DIR}/${PETSC_ARCH}/lib"
     )
 
-    MESSAGE("\nFound PETSC!  Here are the details: ")
-    MESSAGE("   PETSC_DIR = ${PETSC_DIR}")
-    MESSAGE("   PETSC_ARCH = ${PETSC_ARCH}")
-    MESSAGE("   PETSC_LIBRARY_DIRS = ${PETSC_LIBRARY_DIRS}")
-    MESSAGE("   PETSC_INCLUDE_DIRS = ${PETSC_INCLUDE_DIRS}")
-    MESSAGE("End of PETSC details\n")
-    MESSAGE("Setting WITH_PETSC to true\n")
+    # Libraries only (no -L flags here)
+    set(PETSC_LIBRARIES
+        petsc
+        HYPRE
+        spqr
+        umfpack
+        klu
+        cholmod
+        btf
+        ccolamd
+        colamd
+        camd
+        amd
+        suitesparseconfig
+        dmumps
+        mumps_common
+        pord
+        scalapack
+        superlu
+        superlu_dist
+        ml
+    )
 
-    SET(WITH_PETSC 1)
-  ELSE()
-    MESSAGE(WARNING "Could not find PETSC. Compiling svFSI without PETSC.")
-  ENDIF()
+    message("")
+    message("Found PETSC! Here are the details:")
+    message("  PETSC_DIR          = ${PETSC_DIR}")
+    message("  PETSC_ARCH         = ${PETSC_ARCH}")
+    message("  PETSC_INCLUDE_DIRS = ${PETSC_INCLUDE_DIRS}")
+    message("  PETSC_LIBRARY_DIRS = ${PETSC_LIBRARY_DIRS}")
+    message("  PETSC_LIBRARIES    = ${PETSC_LIBRARIES}")
+    message("End of PETSC details")
+    message("")
 
+    set(WITH_PETSC 1)
+  else()
+    message(WARNING "Could not find PETSC_DIR and/or PETSC_ARCH. Compiling svFSI without PETSC.")
+  endif()
 endif()
 
 # add PETSC flags and defines
 if(WITH_PETSC)
-  ADD_DEFINITIONS(-DWITH_PETSC)
+  add_definitions(-DWITH_PETSC)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic -std=c99")
 endif()
 
@@ -285,5 +306,5 @@ if(WITH_TRILINOS)
 endif()
 
 if(WITH_PETSC)
-  target_link_libraries(${SV_SVFSI_EXE} ${PETSC_LIBRARY_DIRS})
+  target_link_libraries(${SV_SVFSI_EXE} ${PETSC_LIBRARIES})
 endif()
