@@ -1,19 +1,20 @@
 include_directories(${MPI_C_INCLUDE_PATH})
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-  set(CMAKE_Fortran_FLAGS "-O3 -DNDEBUG -march=native")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -pthread -std=legacy")
+  # Default aggressive optimization (GNU)
+  set(CMAKE_Fortran_FLAGS "-O3 -DNDEBUG -march=native -mtune=native -ffree-line-length-none -cpp -pthread -std=legacy")
 
-  # Use below flags for debugging
-  # set(CMAKE_Fortran_FLAGS "-O0")
-  # set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -pthread -std=legacy")
-  # set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -Wconversion -Wline-truncation -pedantic -fimplicit-none -fbacktrace -fbounds-check -p -fcheck=all -ffpe-trap=invalid,zero,overflow,underflow")
+  # Keep Makefile behavior: extra fast-math on aarch64 only when PETSc is off
+  if(NOT SV_USE_PETSC)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffast-math -fno-math-errno")
+  endif()
+
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  set(CMAKE_Fortran_FLAGS "-O3 -march=native")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp -pthread")
+  # Default aggressive optimization (Intel)
+  set(CMAKE_Fortran_FLAGS "-O3 -xHost -fp-model fast=2 -fpp -pthread")
+
 else()
-  # nothing for now
-  # may need to set for other compilers
+  # leave defaults for other compilers
 endif()
 
 set(lib ${SV_LIB_SVFSILS_NAME}${SV_MPI_NAME_EXT})
