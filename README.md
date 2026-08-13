@@ -20,7 +20,7 @@ The following packages are required to build and use `svFSI`.
    - blas & lapack
    - trilinos (optional)
 
-On Ubuntu, most of the dependencies can be installed using `apt install`. On macOS, the dependencies may be installed using `brew`. Apart from GNU compilers, `svFSI` can also be built with Intel oneAPI Toolkits. For more details, please refer to [`INSTALL.md`](./INSTALL.md#Build) and [`INSTALL-DEPS.md`](./INSTALL-DEPS.md#intel-oneapi-toolkitsd).
+On Ubuntu, most of the dependencies can be installed using `apt install`. On macOS, the dependencies may be installed using `brew`. Apart from GNU compilers, `svFSI` can also be built with Intel oneAPI Toolkits. For more details, please refer to [`INSTALL.md`](./Documentation/INSTALL.md#Build) and [`INSTALL-DEPS.md`](./Documentation/INSTALL-DEPS.md#intel-oneapi-toolkitsd).
 
 ## Quick Build from Source
 
@@ -41,23 +41,13 @@ Users are recommended to build from the source code to access the most recent fe
    ```
    A successful build will generate a solver binary called `svFSI` in the following directory `build/svFSI-build/bin`.
 
-   For more advanced users, please refer [`INSTALL.md`](./INSTALL.md) for detailed platform-specific instructions to install `svFSI`.
+   For more advanced users, please refer [`INSTALL.md`](./Documentation/INSTALL.md) for detailed platform-specific instructions to install `svFSI`.
 
-## Build With Trilinos
+## Build with PETSc
 
-`svFSI` also supports compilation with [Trilinos](https://github.com/trilinos/Trilinos). Users can build Trilinos locally following its [online documentation](https://docs.trilinos.org/files/TrilinosBuildReference.html).
+`svFSI` includes native support for [PETSc](https://petsc.org/release/) as a linear solver backend. A comprehensive [setup tutorial](./Documentation/PETSc.md) covers local PETSc compilation and how to compile and run `svFSI` with PETSc.
 
-The recommended Trilinos third-party libraries (TPLs) include Boost, BLAS, HDF5, HYPRE, LAPACK, MPI, and MUMPS. The required Trilinos packages are Amesos, AztecOO, Epetra, EpetraEXT, Ifpack, ML, MueLU, ROL, Sacado, Teuchos, and Zoltan.
-
-To enable Trilinos in `svFSI`, users need to turn on the option `SV_USE_TRILINOS` located in the file [`Code/CMake/SimVascularOptions.cmake`](./Code/CMake/SimVascularOptions.cmake) as,
-
-```bash
-option(SV_USE_TRILINOS "Use Trilinos Library with svFSI" ON)
-```
-
-In most cases, users can proceed to build `svFSI` following the [Quick Build](#quick-build), and CMake should be able to locate Trilinos automatically through `find_package`. In case the automatic way fails, users can also specify the path to Trilinos through `ccmake -DCMAKE_PREFIX_PATH:PATH="<Path_to_Trilinos>/lib/cmake/Trilinos;<Path_to_any_other_package>;"`.
-
-For more detailed instructions, please refer to [`INSTALL.md`](./INSTALL.md).
+> **Note:** PETSc components within svFSI receives active development and is generally recommended over Trilinos. Trilinos remains supported for legacy workflows. Users can build svFSI with Trilinos following this [tutorial](./Documentation/INSTALL.md#Build with Trilinos (optional)). svFSI cannot be built with PETSc and Trilinos at the same time.
 
 ## Run Simulation
 

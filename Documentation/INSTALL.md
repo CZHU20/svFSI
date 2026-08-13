@@ -66,20 +66,17 @@ Tested environment: Ubuntu 18.04, Intel oneAPI Base Toolkit 2021.3.0, Intel oneA
 
 ### Build with Trilinos (optional)
 
-Tested environment:
-Trilinos & its dependencies(
-    boost 1.66.0,
-    hdf5 1.10.4,
-    hypre 2.22.0,
-    trilinos 13.01)
+`svFSI` also supports compilation with [Trilinos](https://github.com/trilinos/Trilinos). Users can build Trilinos locally following its [online documentation](https://docs.trilinos.org/files/TrilinosBuildReference.html).
 
-To compile `svFSI` with Trilinos, the following changes need to be made to the file, `Code/CMake/SimVascularOptions.cmake`
+The recommended Trilinos third-party libraries (TPLs) include Boost, BLAS, HDF5, HYPRE, LAPACK, MPI, and MUMPS. The required Trilinos packages are Amesos, AztecOO, Epetra, EpetraEXT, Ifpack, ML, MueLU, ROL, Sacado, Teuchos, and Zoltan.
+
+To enable Trilinos in `svFSI`, users need to turn on the option `SV_USE_TRILINOS` located in the file [`Code/CMake/SimVascularOptions.cmake`](./Code/CMake/SimVascularOptions.cmake) as,
 
 ```bash
 option(SV_USE_TRILINOS "Use Trilinos Library with svFSI" ON)
 ```
 
-Further, a `CMAKE_PREFIX_PATH` should be provided as command line argument pointing to the Trilinos library as,
+In most cases, users can proceed to build `svFSI` following the [Quick Build](#quick-build), and CMake should be able to locate Trilinos automatically through `find_package`. In case the automatic way fails, users can also specify the path to Trilinos through 
 
 ```bash
 ccmake -DCMAKE_PREFIX_PATH:PATH=$(TRILINOS_DIR)/lib/cmake/Trilinos <path_to_svFSI_source>
