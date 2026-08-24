@@ -266,7 +266,6 @@ endif()
 
 
 simvascular_add_executable(${SV_SVFSI_EXE}
-set_target_properties(${SV_SVFSI_EXE} PROPERTIES LINKER_LANGUAGE Fortran)
   SRCS ${CSRCS}
   SRCS ${CXXSRCS}
   SRCS ${FSRCS}
@@ -276,6 +275,7 @@ set_target_properties(${SV_SVFSI_EXE} PROPERTIES LINKER_LANGUAGE Fortran)
   INSTALL_COMP CoreExecutables
   INSTALL_DESTINATION ${SV_INSTALL_RUNTIME_DIR})
 
+set_target_properties(${SV_SVFSI_EXE} PROPERTIES LINKER_LANGUAGE Fortran)
 
 target_link_libraries(${SV_SVFSI_EXE}
   ${GLOBAL_LIBRARIES}
